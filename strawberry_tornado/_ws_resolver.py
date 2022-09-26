@@ -66,7 +66,6 @@ class AdapterParams(TypedDict, total=False):
 
 class GQLWsResolver(GQLBaseResolver):
     """Resolve Web socket communication"""
-    
     __slots__ = ("__protocol",)
     __protocol: GqlProtocol
 

@@ -15,7 +15,12 @@ if TYPE_CHECKING:
 
 @dataclass
 class GQLBaseResolver:
-    __slots__ = ()
+    __slots__ = (
+        "context_method",
+        "root_value_method",
+        "json_encoder",
+        "json_decoder",
+    )
     context_method: Callable[..., Coroutine[Any, Any, Any]]
     root_value_method: Callable[..., Coroutine[Any, Any, Any]]
     json_encoder: Callable[[Dict], Union[str, bytes]]
