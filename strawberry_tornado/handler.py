@@ -74,7 +74,6 @@ class GraphQLHandler(tornado.websocket.WebSocketHandler):
         self.ws_keep_alive_interval = ws_keep_alive_interval
         self.ws_subscription_protocols = ws_subscription_protocols
         self.ws_connection_init_wait_timeout = ws_connection_init_wait_timeout
-        print(self.__slots__)
 
     async def prepare(self) -> None:
         resolver_type = GQLWsResolver if self._is_ws else GQLHttpResolver
