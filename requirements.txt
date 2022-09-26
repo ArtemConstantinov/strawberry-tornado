@@ -1,0 +1,2 @@
+tornado>=6.2.0
+strawberry-graphql>=0.130.3
