@@ -55,9 +55,7 @@ class GraphQLWSAdapter(BaseGraphQLWSHandler):
 
     @final
     async def send_json(self, data: OperationMessage) -> None:
-        await self._send_json(
-            cast(dict, data)
-        )
+        await self._send_json(cast(dict, data))
 
     @final
     async def close(self, code: int = 1000, reason: Optional[str] = None) -> None:

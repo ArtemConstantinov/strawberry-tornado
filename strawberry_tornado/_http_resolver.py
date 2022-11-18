@@ -23,6 +23,7 @@ from strawberry.http import (
 )
 from strawberry.schema.exceptions import InvalidOperationTypeError
 from strawberry.utils.graphiql import get_graphiql_html
+from strawberry.utils.debug import pretty_print_graphql_operation
 from strawberry.file_uploads.utils import replace_placeholders_with_files
 from strawberry.types.graphql import OperationType
 
@@ -90,11 +91,17 @@ class GQLHttpResolver(GQLBaseResolver):
         response = await self.__execute(inst, request_data)
         await inst.finish(response)
 
-    async def __execute(self, inst: "GraphQLHandler", request_data: "GraphQLRequestData", allowed_operation_types: Optional[Iterable[OperationType]] = None) -> Optional[Union[str, bytes]]:
+    async def __execute(self, inst: "GraphQLHandler", request_data: "GraphQLRequestData", allowed_operation_types: Optional[Iterable[OperationType]] = None) -> Optional[Union[str, bytes]]:  # noqa: E501
         context, root = await asyncio.gather(
             self.context_method(),
             self.root_value_method()
         )
+        if inst.application.settings.get("debug", False):
+            pretty_print_graphql_operation(
+                request_data.operation_name,
+                request_data.query,
+                request_data.variables,
+            )
         try:
             result = await inst.schema.execute(
                 query=request_data.query,
@@ -113,7 +120,7 @@ class GQLHttpResolver(GQLBaseResolver):
         )
 
 
-def _decode_request_data(inst: "GraphQLHandler", json_decoder: Callable[[Union[str,bytes]], Dict]) -> Dict[str, Any]:
+def _decode_request_data(inst: "GraphQLHandler", json_decoder: Callable[[Union[str, bytes]], Dict]) -> Dict[str, Any]:
     content_type = inst.request.headers.get("content-type", "")
     if content_type.startswith(CONTENT_JSON):
         return json_decoder(inst.request.body)
