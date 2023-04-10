@@ -76,6 +76,19 @@ class GraphQLWSAdapter(BaseGraphQLWSHandler):
         await super().handle_connection_init(message)
 
     @final
+    async def cleanup_operation(self, operation_id: str) -> None:
+        # ovewrite the base methods coz it's bugy on python >=3.8
+        task_ = self.tasks.pop(operation_id)
+        task_.cancel()
+        with suppress(asyncio.CancelledError):
+            await task_
+
+        generator = self.subscriptions.pop(operation_id)
+        # comment next 2 lines if still get the issue
+        with suppress(RuntimeError):
+            generator.aclose()
+
+    @final
     async def cleanup(self) -> None:
         if self.keep_alive_task:
             self.keep_alive_task.cancel()
