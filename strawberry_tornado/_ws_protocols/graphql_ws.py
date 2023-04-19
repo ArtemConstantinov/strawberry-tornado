@@ -106,5 +106,7 @@ class GraphQLWSAdapter(BaseGraphQLWSHandler):
         if self.connection_init_received:
             return
 
-        reason = "Connection initialisation timeout"
-        await self.close(code=4408, reason=reason)
+        await self.close(
+            code=4408,
+            reason="Connection initialisation timeout"
+        )

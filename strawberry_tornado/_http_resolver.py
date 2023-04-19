@@ -1,7 +1,9 @@
+from __future__ import annotations
 import asyncio
 from http.client import (
     BAD_REQUEST,
     NOT_FOUND,
+    GONE
 )
 import json
 from typing import (
@@ -21,6 +23,7 @@ from strawberry.http import (
     process_result,
     GraphQLRequestData,
 )
+from strawberry.http.types import HTTPMethod
 from strawberry.schema.exceptions import InvalidOperationTypeError
 from strawberry.utils.graphiql import get_graphiql_html
 from strawberry.utils.debug import pretty_print_graphql_operation
@@ -65,7 +68,9 @@ class GQLHttpResolver(GQLBaseResolver):
                 inst.set_status(BAD_REQUEST, "No GraphQL query found in the request")
                 return await inst.finish()
             allowed_operation_types = (
-                OperationType.from_http(inst.request.method or "GET")
+                OperationType.from_http(
+                    cast(HTTPMethod, inst.request.method or "GET")
+                )
                 if inst.allow_queries_via_get else
                 set()
             )
@@ -99,7 +104,7 @@ class GQLHttpResolver(GQLBaseResolver):
         if inst.application.settings.get("debug", False):
             pretty_print_graphql_operation(
                 request_data.operation_name,
-                request_data.query,
+                request_data.query or "",
                 request_data.variables,
             )
         try:
@@ -113,6 +118,9 @@ class GQLHttpResolver(GQLBaseResolver):
             )
         except InvalidOperationTypeError as e:
             inst.set_status(BAD_REQUEST, e.as_http_error_reason(inst.request.method or ""))
+            return None
+        except (asyncio.CancelledError, GeneratorExit):
+            inst.set_status(GONE, "Query canceled when it's still pending.")
             return None
 
         return self.json_encoder(
