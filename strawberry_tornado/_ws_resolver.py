@@ -1,6 +1,7 @@
 from __future__ import annotations
 import asyncio
 from datetime import timedelta
+from logging import warning
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -15,7 +16,7 @@ from typing import (
     cast,
     final,
 )
-
+from tornado.websocket import WebSocketClosedError
 from strawberry.schema import BaseSchema
 from strawberry.subscriptions import (
     GRAPHQL_TRANSPORT_WS_PROTOCOL,
@@ -96,7 +97,10 @@ class GQLWsResolver(GQLBaseResolver):
 
         async def write_msg(response: Mapping[str, Any]) -> None:
             data = self.json_encoder(cast(dict, response))
-            await inst.write_message(data)
+            try:
+                await inst.write_message(data)
+            except WebSocketClosedError:
+                warning(f"WebSocketClosedError: not delivered data: {data}")
 
         params: AdapterParams = {
             "schema": inst.schema,
