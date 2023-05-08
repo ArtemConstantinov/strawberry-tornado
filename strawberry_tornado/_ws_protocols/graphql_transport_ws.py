@@ -13,6 +13,9 @@ from strawberry.schema import BaseSchema
 from strawberry.subscriptions.protocols.graphql_transport_ws.handlers import (
     BaseGraphQLTransportWSHandler,
 )
+from strawberry.subscriptions.protocols.graphql_transport_ws.types import (
+    SubscribeMessage,
+)
 
 
 class GraphQLTransportWSAdapter(BaseGraphQLTransportWSHandler):
@@ -71,6 +74,15 @@ class GraphQLTransportWSAdapter(BaseGraphQLTransportWSHandler):
     def watch_pre_init_connection_timeout(self) -> None:
         timeout_handler = self.handle_connection_init_timeout()
         self.connection_init_timeout_task = asyncio.create_task(timeout_handler)
+    
+    @final
+    async def handle_subscribe(self, message: SubscribeMessage) -> None:
+        context = await self.get_context()
+        if isinstance(context, dict):
+            context["connection_params"] = self.connection_params
+        elif hasattr(context, "connection_params"):
+            setattr(context, "connection_params", self.connection_params)
+        await super().handle_subscribe(message)
 
     @final
     async def cleanup(self) -> None:

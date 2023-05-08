@@ -99,6 +99,15 @@ class GraphQLWSAdapter(BaseGraphQLWSHandler):
             await self.cleanup_operation(operation_id)
 
     @final
+    async def handle_start(self, message: OperationMessage) -> None:
+        context = await self.get_context()
+        if isinstance(context, dict):
+            context["connection_params"] = self.connection_params
+        elif hasattr(context, "connection_params"):
+            setattr(context, "connection_params", self.connection_params)
+        await super().handle_start(message)
+
+    @final
     async def handle_connection_init_timeout(self):
         delay = self.connection_init_wait_timeout.total_seconds()
         await asyncio.sleep(delay=delay)
