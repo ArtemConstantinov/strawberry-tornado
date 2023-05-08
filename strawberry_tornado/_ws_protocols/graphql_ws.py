@@ -47,7 +47,12 @@ class GraphQLWSAdapter(BaseGraphQLWSHandler):
 
     @final
     async def get_context(self) -> Any:
-        return await self._get_context()
+        ctx = await self._get_context()
+        if isinstance(ctx, dict):
+            ctx["connection_params"] = self.connection_params
+        elif hasattr(ctx, "connection_params"):
+            setattr(ctx, "connection_params", self.connection_params)
+        return ctx
 
     @final
     async def get_root_value(self) -> Any:
